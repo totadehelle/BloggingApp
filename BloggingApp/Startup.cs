@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BloggingApp.Repositories;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -17,6 +18,10 @@ namespace BloggingApp
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
+            using (var client = new BloggingContext())
+            {
+                client.Database.EnsureCreated();
+            }
         }
 
         public IConfiguration Configuration { get; }
@@ -25,6 +30,7 @@ namespace BloggingApp
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services.AddEntityFrameworkSqlite().AddDbContext<BloggingContext>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
