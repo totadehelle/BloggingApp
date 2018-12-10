@@ -62,7 +62,8 @@ namespace BloggingApp.Controllers
                 return BadRequest();
             }
 
-            var dbPost = _context.Entry(post).GetDatabaseValues().ToObject() as Post;
+            var dbPost = _context.Posts.AsNoTracking().FirstAsync(p => p.Id == id).Result;
+
             if (DateTime.Now - dbPost.CreationDate > _periodWhenChangesAllowed)
             {
                 return Content("Sorry, the time limit for editing this has expired.");
@@ -121,7 +122,7 @@ namespace BloggingApp.Controllers
                 return NotFound();
             }
 
-            var dbPost = _context.Entry(post).GetDatabaseValues().ToObject() as Post;
+            var dbPost = _context.Posts.AsNoTracking().FirstAsync(p => p.Id == id).Result;
             if (DateTime.Now - dbPost.CreationDate > _periodWhenChangesAllowed)
             {
                 return Content("Sorry, the time limit for editing this has expired.");
