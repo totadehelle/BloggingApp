@@ -7,7 +7,7 @@ namespace BloggingApp.Repositories
     {
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlite(@"DataSource=postsDatabase.db;");
+            optionsBuilder.UseSqlite(@"DataSource=BloggingDatabase.db;");
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -16,14 +16,17 @@ namespace BloggingApp.Repositories
                 .Entity<User>()
                 .HasMany(e => e.Posts)
                 .WithOne(e => e.User)
+                .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<User>()
                 .HasMany(e => e.Comments)
                 .WithOne(e => e.User)
+                .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<Post>()
                 .HasMany(e => e.Comments)
                 .WithOne(e => e.Post)
+                .HasForeignKey(e => e.PostId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
 

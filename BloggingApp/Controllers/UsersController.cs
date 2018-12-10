@@ -60,7 +60,7 @@ namespace BloggingApp.Controllers
             {
                 return BadRequest();
             }
-
+            
             _context.Entry(user).State = EntityState.Modified;
 
             try
@@ -120,21 +120,9 @@ namespace BloggingApp.Controllers
 
         // GET: api/Users/5/posts
         [HttpGet("{id}/posts")]
-        public async Task<IActionResult> GetUserPosts([FromRoute] int id)
+        public IEnumerable<Post> GetUserPosts([FromRoute] int id)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            var user = await _context.Users.FindAsync(id);
-
-            if (user == null)
-            {
-                return NotFound();
-            }
-
-            return Ok(user.Posts);
+            return _context.Posts.Where(p => p.UserId == id);
         }
 
         // GET: api/Users/5/comments
@@ -153,7 +141,8 @@ namespace BloggingApp.Controllers
                 return NotFound();
             }
 
-            return Ok(user.Comments);
+            var comments = _context.Comments.Where(c => c.UserId == id);
+            return Ok(comments);
         }
 
         private bool UserExists(int id)

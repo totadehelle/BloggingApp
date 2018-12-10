@@ -15,7 +15,7 @@ namespace BloggingApp.Controllers
     public class CommentsController : ControllerBase
     {
         private readonly BloggingContext _context;
-        private TimeSpan _periodWhenChangesAllowed = new TimeSpan(0, 1, 0);
+        private TimeSpan _periodWhenChangesAllowed = new TimeSpan(1, 0, 0);
 
         public CommentsController(BloggingContext context)
         {
@@ -55,11 +55,13 @@ namespace BloggingApp.Controllers
                 return BadRequest();
             }
 
-            var oldComment = await _context.Comments.FindAsync(id);
-            if (DateTime.Now - oldComment.CreationDateTime > _periodWhenChangesAllowed)
+            var dbComment = _context.Entry(comment).GetDatabaseValues().ToObject() as Comment;
+            if (DateTime.Now - dbComment.CreationDate > _periodWhenChangesAllowed)
             {
                 return Content("Sorry, the time limit for editing this has expired.");
             }
+
+            comment.CreationDate = dbComment.CreationDate;
 
             _context.Entry(comment).State = EntityState.Modified;
 
@@ -91,6 +93,7 @@ namespace BloggingApp.Controllers
                 return BadRequest(ModelState);
             }
 
+            comment.CreationDate = DateTime.Now;
             _context.Comments.Add(comment);
             await _context.SaveChangesAsync();
 
@@ -112,9 +115,10 @@ namespace BloggingApp.Controllers
                 return NotFound();
             }
 
-            if (DateTime.Now - comment.CreationDateTime > _periodWhenChangesAllowed)
+            var dbComment = _context.Entry(comment).GetDatabaseValues().ToObject() as Comment;
+            if (DateTime.Now - dbComment.CreationDate > _periodWhenChangesAllowed)
             {
-                return Content("Sorry, the time limit for removing this has expired.");
+                return Content("Sorry, the time limit for editing this has expired.");
             }
 
             _context.Comments.Remove(comment);

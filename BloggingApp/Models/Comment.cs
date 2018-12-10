@@ -6,24 +6,18 @@ namespace BloggingApp.Models
 {
     public class Comment
     {
-        public Comment()
-        {
-            CreationDateTime = DateTime.Now;
-        }
-
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        [Required]
+        public int UserId { get; set; }
         public User User { get; set; }
 
-        [Required]
+        public int PostId { get; set; }
         public Post Post { get; set; }
 
-        [Required]
         public string Body { get; set; }
 
-        public DateTime CreationDateTime { get; set; }
+        public DateTime CreationDate { get; set; }
     }
 }

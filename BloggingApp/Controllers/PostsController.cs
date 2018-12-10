@@ -1,13 +1,12 @@
-﻿using System;
+﻿using BloggingApp.Models;
+using BloggingApp.Repositories;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using BloggingApp.Models;
-using BloggingApp.Repositories;
-using Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace BloggingApp.Controllers
 {
@@ -16,7 +15,7 @@ namespace BloggingApp.Controllers
     public class PostsController : ControllerBase
     {
         private readonly BloggingContext _context;
-        private TimeSpan _periodWhenChangesAllowed = new TimeSpan(0, 1, 0);
+        private TimeSpan _periodWhenChangesAllowed = new TimeSpan(1, 0, 0);
 
         public PostsController(BloggingContext context)
         {
@@ -63,12 +62,13 @@ namespace BloggingApp.Controllers
                 return BadRequest();
             }
 
-            var oldPost = await _context.Posts.FindAsync(id);
-            if (DateTime.Now - oldPost.CreationDateTime > _periodWhenChangesAllowed)
+            var dbPost = _context.Entry(post).GetDatabaseValues().ToObject() as Post;
+            if (DateTime.Now - dbPost.CreationDate > _periodWhenChangesAllowed)
             {
                 return Content("Sorry, the time limit for editing this has expired.");
             }
 
+            post.CreationDate = dbPost.CreationDate;
             _context.Entry(post).State = EntityState.Modified;
 
             try
@@ -99,9 +99,9 @@ namespace BloggingApp.Controllers
                 return BadRequest(ModelState);
             }
 
+            post.CreationDate = DateTime.Now;
             _context.Posts.Add(post);
             await _context.SaveChangesAsync();
-
             return CreatedAtAction("GetPost", new { id = post.Id }, post);
         }
 
@@ -115,14 +115,16 @@ namespace BloggingApp.Controllers
             }
 
             var post = await _context.Posts.FindAsync(id);
+
             if (post == null)
             {
                 return NotFound();
             }
 
-            if (DateTime.Now - post.CreationDateTime > _periodWhenChangesAllowed)
+            var dbPost = _context.Entry(post).GetDatabaseValues().ToObject() as Post;
+            if (DateTime.Now - dbPost.CreationDate > _periodWhenChangesAllowed)
             {
-                return Content("Sorry, the time limit for removing this has expired.");
+                return Content("Sorry, the time limit for editing this has expired.");
             }
 
             _context.Posts.Remove(post);
@@ -146,8 +148,8 @@ namespace BloggingApp.Controllers
             {
                 return NotFound();
             }
-
-            return Ok(post.Comments);
+            var comments = _context.Comments.Where(c => c.PostId == id);
+            return Ok(comments);
         }
 
         private bool PostExists(int id)
