@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BloggingApp.Models;
@@ -62,7 +60,12 @@ namespace BloggingApp.Controllers
             {
                 return BadRequest();
             }
-            
+
+            if (User.Identity.Name != user.Email)
+            {
+                return Unauthorized(); //что если не указан E-mail в запросе?
+            }
+
             _context.Entry(user).State = EntityState.Modified;
 
             try
@@ -99,6 +102,11 @@ namespace BloggingApp.Controllers
             if (user == null)
             {
                 return NotFound();
+            }
+
+            if (User.Identity.Name != user.Email)
+            {
+                return Unauthorized();
             }
 
             _context.Users.Remove(user);

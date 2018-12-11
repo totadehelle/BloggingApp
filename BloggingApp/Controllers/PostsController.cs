@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace BloggingApp.Controllers
 {
@@ -65,6 +64,12 @@ namespace BloggingApp.Controllers
             }
 
             var dbPost = _context.Posts.AsNoTracking().FirstAsync(p => p.Id == id).Result;
+            var dbUser = _context.Users.AsNoTracking().FirstAsync(u => u.Id == dbPost.UserId).Result;
+
+            if (User.Identity.Name != dbUser.Email)
+            {
+                return Unauthorized();
+            }
 
             if (DateTime.Now - dbPost.CreationDate > _periodWhenChangesAllowed)
             {
@@ -90,7 +95,7 @@ namespace BloggingApp.Controllers
                 }
             }
 
-            return NoContent();
+            return Ok();
         }
 
         // POST: api/Posts
@@ -100,6 +105,13 @@ namespace BloggingApp.Controllers
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
+            }
+
+            var dbUser = _context.Users.AsNoTracking().FirstAsync(u => u.Id == post.UserId).Result;
+
+            if (User.Identity.Name != dbUser.Email)
+            {
+                return Unauthorized();
             }
 
             post.CreationDate = DateTime.Now;
@@ -124,8 +136,14 @@ namespace BloggingApp.Controllers
                 return NotFound();
             }
 
-            var dbPost = _context.Posts.AsNoTracking().FirstAsync(p => p.Id == id).Result;
-            if (DateTime.Now - dbPost.CreationDate > _periodWhenChangesAllowed)
+            var dbUser = _context.Users.AsNoTracking().FirstAsync(u => u.Id == post.UserId).Result;
+
+            if (User.Identity.Name != dbUser.Email)
+            {
+                return Unauthorized();
+            }
+
+            if (DateTime.Now - post.CreationDate > _periodWhenChangesAllowed)
             {
                 return Content("Sorry, the time limit for editing this has expired.");
             }

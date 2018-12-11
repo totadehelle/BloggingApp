@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BloggingApp.Models;
@@ -58,6 +56,13 @@ namespace BloggingApp.Controllers
             }
 
             var dbComment = _context.Comments.AsNoTracking().FirstAsync(c => c.Id == id).Result;
+            var dbUser = _context.Users.AsNoTracking().FirstAsync(u => u.Id == comment.UserId).Result;
+
+            if (User.Identity.Name != dbUser.Email)
+            {
+                return Unauthorized();
+            }
+
             if (DateTime.Now - dbComment.CreationDate > _periodWhenChangesAllowed)
             {
                 return Content("Sorry, the time limit for editing this has expired.");
@@ -83,7 +88,7 @@ namespace BloggingApp.Controllers
                 }
             }
 
-            return NoContent();
+            return Ok(comment);
         }
 
         // POST: api/Comments
@@ -93,6 +98,13 @@ namespace BloggingApp.Controllers
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
+            }
+
+            var dbUser = _context.Users.AsNoTracking().FirstAsync(u => u.Id == comment.UserId).Result;
+
+            if (User.Identity.Name != dbUser.Email)
+            {
+                return Unauthorized();
             }
 
             comment.CreationDate = DateTime.Now;
@@ -117,8 +129,13 @@ namespace BloggingApp.Controllers
                 return NotFound();
             }
 
-            var dbComment = _context.Comments.AsNoTracking().FirstAsync(c => c.Id == id).Result;
-            if (DateTime.Now - dbComment.CreationDate > _periodWhenChangesAllowed)
+            var dbUser = _context.Users.AsNoTracking().FirstAsync(u => u.Id == comment.UserId).Result;
+            if (User.Identity.Name != dbUser.Email)
+            {
+                return Unauthorized();
+            }
+
+            if (DateTime.Now - comment.CreationDate > _periodWhenChangesAllowed)
             {
                 return Content("Sorry, the time limit for editing this has expired.");
             }
