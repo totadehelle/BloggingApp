@@ -7,11 +7,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BloggingApp.Models;
 using BloggingApp.Repositories;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BloggingApp.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class CommentsController : ControllerBase
     {
         private readonly BloggingContext _context;

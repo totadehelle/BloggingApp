@@ -7,11 +7,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BloggingApp.Models;
 using BloggingApp.Repositories;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BloggingApp.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class UsersController : ControllerBase
     {
         private readonly BloggingContext _context;
@@ -82,20 +84,7 @@ namespace BloggingApp.Controllers
             return NoContent();
         }
 
-        // POST: api/Users
-        [HttpPost]
-        public async Task<IActionResult> AddUser([FromBody] User user)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetUser", new { id = user.Id }, user);
-        }
+        
 
         // DELETE: api/Users/5
         [HttpDelete("{id}")]

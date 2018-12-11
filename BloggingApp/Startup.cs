@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BloggingApp.Repositories;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,6 +33,13 @@ namespace BloggingApp
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
             services.AddEntityFrameworkSqlite().AddDbContext<BloggingContext>();
+            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddCookie(options =>
+                {
+                    options.ExpireTimeSpan = new TimeSpan(0,20,0);
+                    options.Cookie.Name = "BloggingAppCookie";
+                    options.Validate();
+                });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -41,6 +50,10 @@ namespace BloggingApp
                 app.UseDeveloperExceptionPage();
             }
 
+            var cookiePolicyOptions = new CookiePolicyOptions();
+
+            app.UseAuthentication();
+            app.UseCookiePolicy(cookiePolicyOptions);
             app.UseMvc();
         }
     }
