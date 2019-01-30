@@ -1,6 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using BloggingApp.Models;
@@ -36,6 +39,7 @@ namespace BloggingApp.Controllers
             if (_context.Users.Any(u => u.Username == user.Username))
                 return Conflict("User with this username already exists!");
 
+            user.Password = _hashPassword(user.Password);
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
@@ -56,8 +60,8 @@ namespace BloggingApp.Controllers
             {
                 return NotFound();
             }
-
-            if (targetUser.Password != user.Password)
+            
+            if (!_verifyPassword(user.Password, targetUser.Password))
             {
                 return Unauthorized();
             }
@@ -86,6 +90,47 @@ namespace BloggingApp.Controllers
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return Ok("You have logged out successfully");
+        }
+        
+        private string _hashPassword(string password)
+        {
+            // Create a new instance of the MD5CryptoServiceProvider object.
+            MD5CryptoServiceProvider md5Hasher = new MD5CryptoServiceProvider();
+
+            // Convert the input string to a byte array and compute the hash.
+            byte[] data = md5Hasher.ComputeHash(Encoding.Default.GetBytes(password));
+
+            // Create a new Stringbuilder to collect the bytes
+            // and create a string.
+            StringBuilder sBuilder = new StringBuilder();
+
+            // Loop through each byte of the hashed data 
+            // and format each one as a hexadecimal string.
+            for (int i = 0; i < data.Length; i++)
+            {
+                sBuilder.Append(data[i].ToString("x2"));
+            }
+
+            // Return the hexadecimal string.
+            return sBuilder.ToString();
+        }
+        
+        private bool _verifyPassword(string input, string hash)
+        {
+            // Hash the input.
+            string hashOfInput = _hashPassword(input);
+
+            // Create a StringComparer an compare the hashes.
+            StringComparer comparer = StringComparer.OrdinalIgnoreCase;
+
+            if (0 == comparer.Compare(hashOfInput, hash))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 }
